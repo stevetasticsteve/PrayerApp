@@ -207,12 +207,20 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(data[5], self.db.defaultDate)
 
     def test_importToDatabase(self):
-        testFile = os.path.join(os.getcwd(),'Test data','prayer names.csv')
+        testFile = os.path.join(os.getcwd(),'Test data','PlainNames.csv')
         self.db.importToDatabase(testFile)
         self.db.c.execute('''SELECT name FROM nameTable''')
         data = self.db.c.fetchall()
-        self.assertEqual(len(data), 154)
-        self.assertEqual(data[0][0], 'Alex & Owen McClelland')
+        self.assertEqual(len(data), 8)
+        self.assertEqual(data[0][0], 'Test person 1')
+        self.assertEqual(data[7][0], 'Test person 8')
+
+        additonal_names = os.path.join(os.getcwd(),'Test data','additionalPlainNames.csv')
+        self.db.importToDatabase(additonal_names)
+        self.db.c.execute('''SELECT name FROM nameTable''')
+        data = self.db.c.fetchall()
+        self.assertEqual(len(data), 9)
+        self.assertEqual(data[8][0], 'Test person 9')
 
     def test_importExportFile(self):
         testFile = os.path.join(os.getcwd(),'Test data','exportExample.csv')
@@ -221,11 +229,16 @@ class TestDatabase(unittest.TestCase):
                             created, prayerCount last FROM nameTable''')
         data = self.db.c.fetchall()
         self.assertEqual(len(data), 8)
-        self.assertEqual(data[6][0], 'Test person 7')
+        self.assertEqual(data[-1][0], 'Test person 8')
         self.assertEqual(data[7][3], datetime.date(2018, 11, 1))
-        
 
-
+        addition = os.path.join(os.getcwd(),'Test data','additionalExportData.csv')
+        self.db.importToDatabase(addition)
+        self.db.c.execute('''SELECT name, active, prayedFor,
+                                    created, prayerCount last FROM nameTable''')
+        data = self.db.c.fetchall()
+        self.assertEqual(len(data), 9)
+        self.assertEqual(data[-1][0], 'Test person 9')
 if __name__ == '__main__':
     try:
         unittest.main()

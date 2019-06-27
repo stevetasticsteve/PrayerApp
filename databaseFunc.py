@@ -182,7 +182,6 @@ class databaseConnect():
             namesList = []
             for item in reader:
                 namesList.append(item)
-            print(namesList)
 
         try:
             if len(namesList[0]) == 1: # If import just a list of names - a list, not a list of lists
@@ -232,17 +231,3 @@ class databaseConnect():
         self.conn.close()
         self.logger.debug('db closed')
         closeLogging(self.logger)
-
-if __name__ == "__main__":
-    db = databaseConnect('prayer.db')
-    db.addExampleData()
-##    data = db.getUnprayedList()
-##    newNames = db.pickRandomNames(data)
-##    for usedName in newNames:
-##        db.markNameAsPrayed(usedName)
-    db.exportToFile(r'C:\Users\Steve Stanley\Documents\Computing\My_Scripts\Improved PrayerApp\Test data\exportExample.csv')
-##    db.importToDatabase(r'C:\Users\Steve Stanley\Documents\Computing\My_Scripts\Improved PrayerApp\Test data\prayer names.csv')
-
-##    print(newNames)
-    db.closeDatabase()
-
