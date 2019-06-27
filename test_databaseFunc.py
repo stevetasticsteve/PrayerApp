@@ -214,7 +214,7 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(len(data), 154)
         self.assertEqual(data[0][0], 'Alex & Owen McClelland')
 
-    def test_imortExportFile(self):
+    def test_importExportFile(self):
         testFile = os.path.join(os.getcwd(),'Test data','exportExample.csv')
         self.db.importToDatabase(testFile)
         self.db.c.execute('''SELECT name, active, prayedFor,

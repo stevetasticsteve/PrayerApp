@@ -27,7 +27,7 @@ class databaseConnect():
                             created DATE,
                             last DATE,
                             prayerCount INTEGER)''')
-            self.defaultDate = datetime.date(2000, 1, 1)
+            self.defaultDate = datetime.date(2000, 1, 1) # A not prayed for placeholder
 
         except Exception:
             self.logger.critical('__init__ error')
@@ -155,7 +155,7 @@ class databaseConnect():
             self.handleError()
 
     def getActiveNames(self):
-    #returns a list of tuples containing the 3 actuve names and if they are prayed for
+    #returns a list of tuples containing the 3 active names and if they are prayed for
         try:
             self.c.execute('''SELECT name, prayedFor FROM nameTable WHERE active
                             = 'True' ''')
@@ -173,6 +173,8 @@ class databaseConnect():
 
     def importToDatabase(self, file):
     # Only works with .csv
+    # format is "name", "Bool Active", "Bool prayed for", "created", "last prayed", "no of hits"
+    # or just names with return as the delimiter
     # Can't handle pre-existing names, whole import will fail if 1 name already exists
     
         with open(file, encoding = 'UTF-8') as namesFile:
@@ -180,31 +182,40 @@ class databaseConnect():
             namesList = []
             for item in reader:
                 namesList.append(item)
+            print(namesList)
 
         try:
-            if len(namesList[0]) == 1:
+            if len(namesList[0]) == 1: # If import just a list of names - a list, not a list of lists
                 logger.debug('Attempting to import ' + str(len(namesList)) + ' names')
             
                 for name in namesList:
-                    self.c.execute('''INSERT INTO nameTable(name, active, prayedFor,
-                                    created, last, prayerCount) VALUES (?, 'False',
-                                    'False', ?, ?, 0)''',
-                                    (name[0], datetime.date.today(),
-                                    self.defaultDate))
+                    try:
+                        self.c.execute('''INSERT INTO nameTable(name, active, prayedFor,
+                                        created, last, prayerCount) VALUES (?, 'False',
+                                        'False', ?, ?, 0)''',
+                                        (name[0], datetime.date.today(),
+                                        self.defaultDate))
+                    except sqlite3.IntegrityError:
+                        logger.info('name already exists, skipping import')
+                        continue
                 self.conn.commit()
                 logger.debug('Import operation successful')
-            else:
-                logger.debug('Attempting to import' + str(len(namesList)) + ' complete records')
+            else: # importing an exported .csv
+                logger.debug('Attempting to import ' + str(len(namesList)) + ' records')
                 for record in namesList:
-                    self.c.execute('''INSERT INTO nameTable (name, active, prayedFor,
-                                    created, last, prayerCount) VALUES (?, 'False',
-                                    ?, ?, ?, ?)''', (record[0], record[2], record[3],
-                                                     record[4], record[5]))
+                    try:
+                        self.c.execute('''INSERT INTO nameTable (name, active, prayedFor,
+                                        created, last, prayerCount) VALUES (?, 'False',
+                                        ?, ?, ?, ?)''', (record[0], record[2], record[3],
+                                                         record[4], record[5]))
+                    except sqlite3.IntegrityError:
+                        logger.info('name already exists, skipping import')
+                        continue
                 self.conn.commit()
                 logger.debug('Import operation successful')
-            
+
         except Exception:
-            logger.debug('Import failed')
+            logger.debug('Unhandled error')
             self.handleError()
 
     def exportToFile(self, targetFilePath):
