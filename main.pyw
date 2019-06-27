@@ -1,17 +1,14 @@
 import sys
-import logging
 import os
 import sqlite3
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QFileDialog
 from PyQt5.QtWidgets import QInputDialog
 from PyQt5.QtGui import QIcon
-from PyQt5 import QtCore
-from databaseFunc import databaseConnect
+from databaseFunc import DatabaseConnect
 from prayerUI import *
 from logSettings import createLogger, closeLogging
 
 logger = createLogger(__name__)
-##logger.addHandler(logging.StreamHandler())
 logger.info('GUI started')
 
 
@@ -21,10 +18,10 @@ class MyApp(QMainWindow):
         self.ui = Ui_MainWindow()
         self.setWindowIcon(QIcon('logo.png'))
         self.ui.setupUi(self)
-        self.db = databaseConnect('prayer.db')
+        self.db = DatabaseConnect('prayer.db')
         self.ui.newNamesButton.clicked.connect(self.newNames)
         self.ui.prayedForAllButton.clicked.connect(self.markAllNames)
-        self.startNames = self.db.getActiveNames()
+        self.startNames = self.db.get_active_names()
         self.ui.name1Label.setText(self.startNames[0][0])
         if self.startNames[0][1] == 'True':
             self.strikethrough(self.ui.name1Label)
@@ -43,23 +40,22 @@ class MyApp(QMainWindow):
         self.ui.actionAdd_new_name.triggered.connect(self.addName)
         self.ui.actionEdit_names.triggered.connect(self.editName)
         self.ui.actionReset_names.triggered.connect(self.resetNames)
-        self.show
 
     def errorHandling(self):
         logger.exception('Fatal Error:')
         QMessageBox.about(self, 'Error', 'A fatal error has occured, '
-                              'check the log for details')
+                          'check the log for details')
         sys.exit()
 
     def closeEvent(self, event):
         logger.debug('Close event')
-        self.db.closeDatabase()
+        self.db.close_database()
         app.quit()
 
     def newNames(self):
         try:
             logger.debug('newNames called')
-            newNames = self.db.pickRandomNames(self.db.getUnprayedList())
+            newNames = self.db.pick_random_names(self.db.get_unprayed_list())
             logger.debug('new names = ' + str(newNames))
             self.ui.name1Label.setText(newNames[0])
             self.ui.name2Label.setText(newNames[1])
@@ -88,7 +84,7 @@ class MyApp(QMainWindow):
         logger.debug('markName called for ' + name)
         try:
             self.strikethrough(item)
-            self.db.markNameAsPrayed(item.text())
+            self.db.mark_name_as_prayed(item.text())
         except Exception:
             self.errorHandling()
             
@@ -109,7 +105,7 @@ class MyApp(QMainWindow):
                                                 os.path.expanduser('~\\Documents'),
                                                 'CSV file (*.csv)')
             if fname:
-                self.db.importToDatabase(fname)
+                self.db.import_to_database(fname)
         except Exception:
             self.errorHandling()
 
@@ -120,7 +116,7 @@ class MyApp(QMainWindow):
                                                     os.path.expanduser('~\\Documents'),
                                                     'CSV file (*.csv)')
             if file_name:
-                self.db.exportToFile(file_name)
+                self.db.export_to_file(file_name)
         except Exception:
             self.errorHandling()
 
@@ -129,7 +125,7 @@ class MyApp(QMainWindow):
         try:
             name, ok = QInputDialog.getText(self, 'Add an entry', 'Enter name: ')
             if name and ok:
-                self.db.addNameToDatabase(name)
+                self.db.add_name_to_database(name)
                 QMessageBox.about(self, 'Database updated', (str(name) + ' was added to database'))
                 logger.debug(str(name) + ' added to database')
         except sqlite3.IntegrityError:
@@ -144,14 +140,12 @@ class MyApp(QMainWindow):
     def resetNames(self):
         try:
             logger.debug('resetNames called')
-            self.db.resetNames()
-            QMessageBox.about(self, 'Reset','Names reset')
+            self.db.reset_names()
+            QMessageBox.about(self, 'Reset', 'Names reset')
         except Exception:
             self.errorHandling()
 
 
-
-        
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     w = MyApp()
