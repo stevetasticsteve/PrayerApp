@@ -225,6 +225,23 @@ class DatabaseConnect:
             for row in data:
                 writer.writerow(row)
 
+    def get_all_names(self):
+        self.c.execute('''SELECT name From nameTable''')
+        data = self.c.fetchall()
+        result = []
+        for item in data:
+            result.append(item[0])
+        return result
+
+    def update_name(self,changed_names):
+        # takes a dictionary with old names as keys to new values
+        for name in changed_names:
+            logger.info('Changing ' + name + ' to ' + changed_names[name])
+            self.c.execute('''UPDATE nameTable SET name=? WHERE name=?''',
+                           (changed_names[name], name))
+        self.conn.commit()
+
+
     def close_database(self):
         self.conn.close()
         self.logger.debug('db closed')

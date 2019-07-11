@@ -1,8 +1,8 @@
 import sys
 import os
 import sqlite3
-from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QFileDialog
-from PyQt5.QtWidgets import QInputDialog
+from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QFileDialog, QPushButton
+from PyQt5.QtWidgets import QInputDialog, QDialog, QGridLayout, QListWidget, QListWidgetItem
 from PyQt5.QtGui import QIcon
 from databaseFunc import DatabaseConnect
 from prayerUI import *
@@ -135,7 +135,11 @@ class MyApp(QMainWindow):
             self.errorHandling()
 
     def editName(self):
-        logger.debug('editName called')
+        try:
+            table = editScreenWidget(w, self.db)
+            logger.debug('editName called')
+        except Exception:
+            self.errorHandling()
 
     def resetNames(self):
         try:
@@ -144,6 +148,47 @@ class MyApp(QMainWindow):
             QMessageBox.about(self, 'Reset', 'Names reset')
         except Exception:
             self.errorHandling()
+
+class editScreenWidget(QDialog):
+    def __init__(self, window, db):
+        QDialog.__init__(self, window)
+        self.setWindowTitle('Edit names')
+        self.db = db
+        self.setGeometry(100, 150, 400, 650)
+        self.setModal(True)
+        self.grid = QGridLayout()
+        self.list = QListWidget()
+        names = db.get_all_names()
+        names.sort()
+        self.original_names = names.copy()
+        for i, name in enumerate(names):
+            item = QListWidgetItem(name)
+            item.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
+            self.list.insertItem(i, item)
+
+
+        self.ok_btn = QPushButton('Ok')
+        self.ok_btn.pressed.connect(self.update_db)
+        self.cancel_btn = QPushButton('Cancel')
+        self.cancel_btn.pressed.connect(self.close)
+        self.grid.addWidget(self.list, 0, 0, 1, 2)
+        self.grid.addWidget(self.ok_btn, 1, 0)
+        self.grid.addWidget(self.cancel_btn, 1, 1)
+        self.setLayout(self.grid)
+        self.show()
+
+    def update_db(self):
+        try:
+            changed = {} # edited names, original name as key
+            for i in range(self.list.count()):
+                if self.list.item(i).text() != self.original_names[i]:
+                    changed[self.original_names[i]] = self.list.item(i).text()
+            self.db.update_name(changed)
+            self.close()
+        except Exception:
+            logger.exception('Fatal error:')
+
+
 
 
 if __name__ == '__main__':
