@@ -129,7 +129,7 @@ class DatabaseConnect:
         try:
             self.c.execute('''SELECT prayerCount FROM nameTable
                             WHERE name = ? ''', (name,))
-            count = self.c.fetchone()[0]
+            count = int(self.c.fetchone()[0])
             count += 1
             self.c.execute('''UPDATE nameTable SET prayedFor = 'True',
                           last = ?, prayerCount = ? WHERE name = ?''',
