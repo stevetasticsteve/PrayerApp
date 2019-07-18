@@ -152,6 +152,7 @@ class MyApp(QMainWindow):
 class editScreenWidget(QDialog):
     def __init__(self, window, db):
         QDialog.__init__(self, window)
+        self.window = window
         self.setWindowTitle('Edit names')
         self.db = db
         self.setGeometry(100, 150, 400, 650)
@@ -168,7 +169,7 @@ class editScreenWidget(QDialog):
 
 
         self.ok_btn = QPushButton('Ok')
-        self.ok_btn.pressed.connect(self.update_db)
+        self.ok_btn.pressed.connect(lambda: self.update_db(self.window))
         self.cancel_btn = QPushButton('Cancel')
         self.cancel_btn.pressed.connect(self.close)
         self.grid.addWidget(self.list, 0, 0, 1, 2)
@@ -177,7 +178,7 @@ class editScreenWidget(QDialog):
         self.setLayout(self.grid)
         self.show()
 
-    def update_db(self):
+    def update_db(self, window):
         try:
             changed = {} # edited names, original name as key
             for i in range(self.list.count()):
@@ -185,6 +186,7 @@ class editScreenWidget(QDialog):
                     changed[self.original_names[i]] = self.list.item(i).text()
             self.db.update_name(changed)
             self.close()
+            window.newNames()
         except Exception:
             logger.exception('Fatal error:')
 
