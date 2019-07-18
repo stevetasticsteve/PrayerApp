@@ -2,3 +2,8 @@ This simple Qt5 app keeps a record of people to pray for in the background as a 
 It's a simple app to pray for 3 people a day.
 
 Or to remember 3 things a day randomly from a long list.
+
+Todo:
+-Clean up error handling. Way too many except Exceptions; I was new to QT5 logging
+-Make logging more useful
+-Make import/export more robust and easier to use for non techies
